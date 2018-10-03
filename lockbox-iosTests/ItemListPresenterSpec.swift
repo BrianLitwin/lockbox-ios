@@ -14,6 +14,8 @@ import Storage
 
 class ItemListPresenterSpec: QuickSpec {
     class FakeItemListView: ItemListViewProtocol {
+        var fakeOnSettingsPressed = PublishSubject<Void>()
+        var fakeOnSortingButtonPressed = PublishSubject<Void>()
         var sortingButtonHidden: AnyObserver<Bool>?
         var itemsObserver: TestableObserver<[ItemSectionModel]>!
         var sortButtonEnableObserver: TestableObserver<Bool>!
@@ -27,7 +29,15 @@ class ItemListPresenterSpec: QuickSpec {
 
         var displayOptionSheetButtons: [AlertActionButtonConfiguration]?
         var displayOptionSheetTitle: String?
-
+        
+        var onSettingsButtonPressed: ControlEvent<Void>? {
+            return ControlEvent<Void>(events: fakeOnSettingsPressed.asObservable())
+        }
+        
+        var onSortingButtonPressed: ControlEvent<Void>? {
+            return ControlEvent<Void>(events: fakeOnSortingButtonPressed.asObservable())
+        }
+        
         func bind(items: Driver<[ItemSectionModel]>) {
             items.drive(itemsObserver).disposed(by: self.disposeBag)
         }
@@ -553,13 +563,8 @@ class ItemListPresenterSpec: QuickSpec {
 
             describe("sortingButton") {
                 beforeEach {
-                    let voidObservable = self.scheduler.createColdObservable([next(50, ())])
-
-                    voidObservable
-                            .bind(to: self.subject.sortingButtonObserver)
-                            .disposed(by: self.disposeBag)
-
-                    self.scheduler.start()
+                    self.subject.onViewReady()
+                    self.view.fakeOnSortingButtonPressed.onNext(())
                     self.userDefaultStore.itemListSortStub.onNext(Setting.ItemListSort.alphabetically)
                 }
 
@@ -599,13 +604,8 @@ class ItemListPresenterSpec: QuickSpec {
 
             describe("settings button") {
                 beforeEach {
-                    let voidObservable = self.scheduler.createColdObservable([next(50, ())])
-
-                    voidObservable
-                            .bind(to: self.subject.onSettingsTapped)
-                            .disposed(by: self.disposeBag)
-
-                    self.scheduler.start()
+                    self.subject.onViewReady()
+                    self.view.fakeOnSettingsPressed.onNext(())
                 }
 
                 it("dispatches the setting route action") {
