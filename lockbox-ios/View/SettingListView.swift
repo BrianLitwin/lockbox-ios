@@ -64,6 +64,14 @@ extension SettingListView: SettingListViewProtocol {
                     .disposed(by: self.disposeBag)
         }
     }
+    
+    var onDoneButtonPressed: ControlEvent<Void>? {
+        if let button = self.navigationItem.rightBarButtonItem?.customView as? UIButton {
+            return button.rx.tap
+        }
+        
+        return nil
+    }
 }
 
 extension SettingListView {
@@ -144,11 +152,6 @@ extension SettingListView {
             .font: UIFont.navigationButtonFont
         ], for: .normal)
 
-        if let presenter = presenter {
-            navigationItem.rightBarButtonItem?.rx.tap
-                    .bind(to: presenter.onDone)
-                    .disposed(by: self.disposeBag)
-        }
     }
 
     fileprivate func setupLockNowButton() {
